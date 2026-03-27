@@ -1,0 +1,121 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # Disable default filters that might cause issues
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      routes:
+        # ── Patient Service ──────────────────────────────
+        - id: patient-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/patients/**
+          filters:
+            - RewritePath=/patients/(?<segment>.*), /patients/${segment}
+
+        # ── Doctor Service ───────────────────────────────
+        - id: doctor-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/doctors/**
+          filters:
+            - RewritePath=/doctors/(?<segment>.*), /doctors/${segment}
+
+        # ── Appointment Service ──────────────────────────
+        - id: appointment-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/appointments/**
+          filters:
+            - RewritePath=/appointments/(?<segment>.*), /appointments/${segment}
+
+        # ── Department Service ───────────────────────────
+        - id: department-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/departments/**
+          filters:
+            - RewritePath=/departments/(?<segment>.*), /departments/${segment}
+
+        # ── Medical Record Service ───────────────────────
+        - id: medical-record-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/medical-records/**
+          filters:
+            - RewritePath=/medical-records/(?<segment>.*), /medical-records/${segment}
+
+        # ── Swagger Routes (for accessing swagger through gateway) ──
+
+        # Patient Swagger
+        - id: patient-service-swagger
+          uri: http://localhost:8081
+          predicates:
+            - Path=/patients/swagger-ui.html, /patients/swagger-ui/**, /patients/api-docs/**
+          filters:
+            - RewritePath=/patients/swagger-ui.html, /swagger-ui.html
+            - RewritePath=/patients/swagger-ui/(?<segment>.*), /swagger-ui/${segment}
+            - RewritePath=/patients/api-docs/(?<segment>.*), /api-docs/${segment}
+
+        # Doctor Swagger
+        - id: doctor-service-swagger
+          uri: http://localhost:8082
+          predicates:
+            - Path=/doctors/swagger-ui.html, /doctors/swagger-ui/**, /doctors/api-docs/**
+          filters:
+            - RewritePath=/doctors/swagger-ui.html, /swagger-ui.html
+            - RewritePath=/doctors/swagger-ui/(?<segment>.*), /swagger-ui/${segment}
+            - RewritePath=/doctors/api-docs/(?<segment>.*), /api-docs/${segment}
+
+        # Appointment Swagger
+        - id: appointment-service-swagger
+          uri: http://localhost:8083
+          predicates:
+            - Path=/appointments/swagger-ui.html, /appointments/swagger-ui/**, /appointments/api-docs/**
+          filters:
+            - RewritePath=/appointments/swagger-ui.html, /swagger-ui.html
+            - RewritePath=/appointments/swagger-ui/(?<segment>.*), /swagger-ui/${segment}
+            - RewritePath=/appointments/api-docs/(?<segment>.*), /api-docs/${segment}
+
+        # Department Swagger
+        - id: department-service-swagger
+          uri: http://localhost:8084
+          predicates:
+            - Path=/departments/swagger-ui.html, /departments/swagger-ui/**, /departments/api-docs/**
+          filters:
+            - RewritePath=/departments/swagger-ui.html, /swagger-ui.html
+            - RewritePath=/departments/swagger-ui/(?<segment>.*), /swagger-ui/${segment}
+            - RewritePath=/departments/api-docs/(?<segment>.*), /api-docs/${segment}
+
+        # Medical Record Swagger
+        - id: medical-record-service-swagger
+          uri: http://localhost:8085
+          predicates:
+            - Path=/medical-records/swagger-ui.html, /medical-records/swagger-ui/**, /medical-records/api-docs/**
+          filters:
+            - RewritePath=/medical-records/swagger-ui.html, /swagger-ui.html
+            - RewritePath=/medical-records/swagger-ui/(?<segment>.*), /swagger-ui/${segment}
+            - RewritePath=/medical-records/api-docs/(?<segment>.*), /api-docs/${segment}
+
+# Actuator - for monitoring gateway
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
